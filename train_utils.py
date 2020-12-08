@@ -60,6 +60,8 @@ def predict_on(model, test_loader):
     y_pred_list = []
     model.eval()
     for batch in tqdm(test_loader):
+        for col in batch:
+            batch[col] = batch[col].cuda()
         # FORWARD
         with torch.no_grad():
             y_pred = torch.squeeze(model(batch), dim=1)
