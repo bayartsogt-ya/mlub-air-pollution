@@ -1,7 +1,9 @@
 import os
+import numpy as np
+from tqdm import tqdm
+
 import torch
 import torch.nn as nn
-import numpy as np
 from sklearn.metrics import mean_squared_error
 from utils import CAT_FEATURES, CONT_FEATURES
 from model import MLP
@@ -11,7 +13,7 @@ from dataset import TrainDataset, TestDataset
 def train_epoch(model, train_loader, optimizer, loss_fn, device):
     train_loss = 0
     model.train()
-    for batch in train_loader:
+    for batch in tqdm(train_loader):
         optimizer.zero_grad()
 
         # FORWARD
@@ -33,7 +35,7 @@ def validate_on(model, valid_loader, loss_fn, device):
     # VALIDATION
     valid_loss = 0
     model.eval()
-    for batch in valid_loader:
+    for batch in tqdm(valid_loader):
         # FORWARD
         y_true = batch["y"].to(device)
         y_pred = model(batch)
@@ -50,7 +52,7 @@ def predict_on(model, test_loader):
     # VALIDATION
     y_pred_list = []
     model.eval()
-    for batch in test_loader:
+    for batch in tqdm(test_loader):
         # FORWARD
         y_pred = model(batch)
         y_pred_list.append(y_pred.cpu().detach().numpy())
@@ -88,7 +90,7 @@ def train_fold(PARAMS, fold, train_, valid_, test,
 
         # LOG THE TRAIN PROGRESS
         if PARAMS["VERBOSE"] != None and epoch % PARAMS["VERBOSE"] == 0:
-            print("%5d | %10.1f | %10.1f" % (epoch, train_loss, valid_loss))
+            print("\r\r%5d | %10.1f | %10.1f" % (epoch, train_loss, valid_loss))
 
         # SAVE BEST MODEL
         if valid_loss < best_loss:
