@@ -16,7 +16,7 @@ if __name__ == "__main__":
     print("device:", DEVICE)
 
     st = time()
-    targetTransform = TargetTransform(transform_power=2)
+    targetTransform = TargetTransform(transform_power=1)
     train, test, cat_input_dims = read_and_preprocess(targetTransform)
     train = train.reset_index(drop=True)
     test = test.reset_index(drop=True)
