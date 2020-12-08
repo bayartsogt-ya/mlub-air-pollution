@@ -14,13 +14,17 @@ def train_epoch(model, train_loader, optimizer, loss_fn, device):
     train_loss = 0
     model.train()
     for batch in tqdm(train_loader):
+
+        for col in batch:
+            batch[col] = batch[col].to(device)
+
         optimizer.zero_grad()
 
         # FORWARD
-        y_true = batch["y"].to(device)
+        # y_true = batch["y"].to(device)
         y_pred = torch.squeeze(model(batch), dim=1)
 
-        loss = loss_fn(y_true, y_pred)
+        loss = loss_fn(batch["y"], y_pred)
         loss.backward()
         optimizer.step()
 
@@ -37,10 +41,12 @@ def validate_on(model, valid_loader, loss_fn, device):
     model.eval()
     for batch in tqdm(valid_loader):
         # FORWARD
-        y_true = batch["y"].to(device)
+        for col in batch:
+            batch[col] = batch[col].to(device)
+
         with torch.no_grad():
             y_pred = torch.squeeze(model(batch), dim=1)
-        loss = loss_fn(y_true, y_pred)
+        loss = loss_fn(batch["y"], y_pred)
 
         valid_loss += loss.item()
 
@@ -80,7 +86,8 @@ def train_fold(PARAMS, fold, train_, valid_, test,
 
     loss_fn = nn.MSELoss()
     model_path = os.path.join(PARAMS["MODEL_DIR"], "model_%d.pth" % (fold))
-    model = MLP(cat_feat_dims=cat_input_dims, cont_feat=cont_feat, device=device).to(device)
+    model = MLP(cat_feat_dims=cat_input_dims, cont_feat=cont_feat, device=device)
+    model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=PARAMS["LEARNING_RATE"], weight_decay=PARAMS["WEIGHT_DECAY"])
 
     best_loss = np.inf
@@ -102,7 +109,8 @@ def train_fold(PARAMS, fold, train_, valid_, test,
             torch.save(model.state_dict(), model_path)
 
     print("Testing...")
-    model = MLP(cat_feat_dims=cat_input_dims, cont_feat=cont_feat, device=device).to(device)
+    model = MLP(cat_feat_dims=cat_input_dims, cont_feat=cont_feat, device=device)
+    model.to(device)
     model.load_state_dict(torch.load(model_path))
 
     y_valid_pred = predict_on(model, valid_loader)

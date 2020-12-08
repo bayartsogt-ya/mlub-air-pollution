@@ -2,6 +2,7 @@ import torch
 
 import numpy as np
 import pandas as pd
+from time import time
 from tqdm.auto import tqdm
 
 from sklearn.metrics import mean_squared_error
@@ -14,10 +15,13 @@ if __name__ == "__main__":
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     print("device:", DEVICE)
 
+    st = time()
     targetTransform = TargetTransform(transform_power=2)
     train, test, cat_input_dims = read_and_preprocess(targetTransform)
     train = train.reset_index(drop=True)
     test = test.reset_index(drop=True)
+
+    print("DONE READING DATA %4.1f sec"%(time() - st))
 
     PARAMS = {
         "BATCH_SIZE": 32,

@@ -33,12 +33,12 @@ class MLP(torch.nn.Module):
         xs = []
         # categorical features
         for cat_col, cat_emb in self.embedding_dict.items():
-            x = cat_emb(inp_dct[cat_col].to(self.device))
-            x = F.relu(self.dropout_emb(x))
+            # x = #.to(self.device))
+            x = F.relu(self.dropout_emb(cat_emb(inp_dct[cat_col])))
             xs.append(torch.squeeze(x, 1))
 
         # continous features
-        x = self.linear_cont(inp_dct['cont_feat'].to(self.device))
+        x = self.linear_cont(inp_dct['cont_feat'])#.to(self.device))
         x = self.dropout_cont(x)
         xs.append(F.relu(x))
 
