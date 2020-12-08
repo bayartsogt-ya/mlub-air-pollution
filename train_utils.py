@@ -38,7 +38,7 @@ def validate_on(model, valid_loader, loss_fn, device):
     for batch in tqdm(valid_loader):
         # FORWARD
         y_true = batch["y"].to(device)
-        y_pred = model(batch)
+        y_pred = torch.squeeze(model(batch), dim=1)
         loss = loss_fn(y_true, y_pred)
 
         valid_loss += loss.item()
@@ -86,7 +86,7 @@ def train_fold(PARAMS, fold, train_, valid_, test,
     print("-----   ----------   ----------")
     for epoch in range(1, PARAMS["EPOCHS"] + 1):
         train_loss = train_epoch(model, train_loader, optimizer, loss_fn, device)
-        valid_loss = validate_on(model, train_loader, loss_fn, device)
+        valid_loss = validate_on(model, valid_loader, loss_fn, device)
 
         # LOG THE TRAIN PROGRESS
         if PARAMS["VERBOSE"] != None and epoch % PARAMS["VERBOSE"] == 0:
