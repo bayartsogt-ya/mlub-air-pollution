@@ -32,9 +32,9 @@ if __name__ == "__main__":
 
     PARAMS = {
         "BATCH_SIZE": 512,
-        "EPOCHS": 10,
-        "LEARNING_RATE": 1e-1,
-        "WEIGHT_DECAY": 1e-3,
+        "EPOCHS": 30,
+        "LEARNING_RATE": 5e-4,
+        "WEIGHT_DECAY": 1e-7,
         "VERBOSE": 1,
         "MODEL_DIR": "./output/models",
     }
