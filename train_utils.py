@@ -7,6 +7,7 @@ from utils import CAT_FEATURES, CONT_FEATURES
 from model import MLP
 from dataset import TrainDataset, TestDataset
 
+
 def train_epoch(model, train_loader, optimizer, loss_fn, device):
     train_loss = 0
     model.train()
@@ -20,12 +21,13 @@ def train_epoch(model, train_loader, optimizer, loss_fn, device):
         loss = loss_fn(y_true, y_pred)
         loss.backward()
         optimizer.step()
-        
+
         train_loss += loss.item()
-        
+
     train_loss /= len(train_loader)
 
     return train_loss
+
 
 def validate_on(model, valid_loader, loss_fn, device):
     # VALIDATION
@@ -43,6 +45,7 @@ def validate_on(model, valid_loader, loss_fn, device):
 
     return valid_loss
 
+
 def predict_on(model, test_loader):
     # VALIDATION
     y_pred_list = []
@@ -55,8 +58,8 @@ def predict_on(model, test_loader):
     return np.concatenate(y_pred_list, 0)
 
 
-def train_fold(PARAMS, fold, train_, valid_, test, 
-                seed, cat_input_dims, device, cat_feat=CAT_FEATURES, cont_feat=CONT_FEATURES):
+def train_fold(PARAMS, fold, train_, valid_, test,
+               seed, cat_input_dims, device, cat_feat=CAT_FEATURES, cont_feat=CONT_FEATURES):
 
     train_loader = torch.utils.data.DataLoader(
         TrainDataset(train_, cat_feat, cont_feat),
@@ -72,7 +75,7 @@ def train_fold(PARAMS, fold, train_, valid_, test,
         shuffle=False)
 
     loss_fn = nn.MSELoss()
-    model_dir = os.path.join(PARAMS["MODEL_DIR"],"model_%d.pth"%(fold))
+    model_dir = os.path.join(PARAMS["MODEL_DIR"], "model_%d.pth" % (fold))
     model = MLP(cat_feat_dims=cat_input_dims, cont_feat=cont_feat, device=device).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=PARAMS["LEARNING_RATE"], weight_decay=PARAMS["WEIGHT_DECAY"])
 
@@ -90,7 +93,7 @@ def train_fold(PARAMS, fold, train_, valid_, test,
         # SAVE BEST MODEL
         if valid_loss < best_loss:
             torch.save(model.state_dict(), model_dir)
-    
+
     print("Testing...")
     model = MLP(cat_feat_dims=cat_input_dims, cont_feat=cont_feat, device=device).to(device)
     model.load_state_dict(torch.load(model_dir))

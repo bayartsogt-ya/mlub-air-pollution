@@ -2,7 +2,7 @@ import os
 import gc
 import sys
 import math
-import torch # PyTorch
+import torch  # PyTorch
 import random
 import joblib
 import warnings
@@ -42,7 +42,7 @@ def read_data(root_folder="./data"):
     df_sub = pd.read_csv(os.path.join(root_folder, "sample_submission.csv"))
 
     df_train = df_train.rename(columns={"type": "pm_type"})
-    df_test  = df_test.rename(columns={"type": "pm_type"})
+    df_test = df_test.rename(columns={"type": "pm_type"})
 
     df_train['date'] = pd.to_datetime(df_train['date'])
     df_test['date'] = pd.to_datetime(df_test['date'])
@@ -239,9 +239,11 @@ def read_and_preprocess(targetTransform):
 
     return train, test, cat_input_dims
 
+
 def create_model_dir(directory):
     if not os.path.isdir(directory):
         os.makedirs(directory)
+
 
 def seed_everything(seed=42):
     random.seed(seed)
@@ -250,6 +252,7 @@ def seed_everything(seed=42):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
+
 
 if __name__ == '__main__':
     targetTransform = TargetTransform(transform_power=2)

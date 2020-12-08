@@ -16,15 +16,16 @@ if __name__ == "__main__":
 
     targetTransform = TargetTransform(transform_power=2)
     train, test, cat_input_dims = read_and_preprocess(targetTransform)
-    train = train.reset_index(drop=True); test = test.reset_index(drop=True)
+    train = train.reset_index(drop=True)
+    test = test.reset_index(drop=True)
 
     PARAMS = {
         "BATCH_SIZE": 32,
-        "EPOCHS":1,
+        "EPOCHS": 1,
         "LEARNING_RATE": 1e-1,
         "WEIGHT_DECAY": 1e-3,
-        "VERBOSE" : 1,
-        "MODEL_DIR" : "./output/models",
+        "VERBOSE": 1,
+        "MODEL_DIR": "./output/models",
     }
 
     NFOLD = 3
@@ -43,7 +44,7 @@ if __name__ == "__main__":
         print("-- SEED:", seed)
         print("-"*10)
 
-        seed_everything(seed) # set a seed to every libraries
+        seed_everything(seed)  # set a seed to every libraries
 
         # some containers
         scores = []
@@ -51,13 +52,13 @@ if __name__ == "__main__":
         pred_ = np.zeros(test.shape[0],)
 
         for fold in range(NFOLD):
-            
+
             # GET FOLD DATA
             train_idx, valid_idx = train[train["fold"] !=
-                                            fold].index, train[train["fold"] == fold].index
+                                         fold].index, train[train["fold"] == fold].index
             train_, valid_ = train.loc[train_idx, ], train.loc[valid_idx, ]
             train_, valid_ = train_.reset_index(drop=True), valid_.reset_index(drop=True)
-            
+
             print(train_.shape, valid_.shape)
 
             # TRAIN AND TEST
@@ -68,7 +69,7 @@ if __name__ == "__main__":
             pred_ += targetTransform.inverse_transform_target(y_test_pred)/NFOLD
 
             score = np.sqrt(mean_squared_error(valid_.aqi.values,
-                                                targetTransform.inverse_transform_target(y_valid_pred)))
+                                               targetTransform.inverse_transform_target(y_valid_pred)))
             scores.append(score)
 
             print("RMSE: %2.4f" % score)
