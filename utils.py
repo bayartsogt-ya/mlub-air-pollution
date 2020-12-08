@@ -2,13 +2,15 @@ import os
 import gc
 import sys
 import math
+import torch # PyTorch
+import random
 import joblib
 import warnings
 import numpy as np
 import pandas as pd
 
 # categorical columns
-CAT_FEATURES = ["type", "station", "summary", "icon"]  # ,"month","source","baseline_month"]
+CAT_FEATURES = ["pm_type", "station", "summary", "icon"]  # ,"month","source","baseline_month"]
 
 # continues columns
 CONT_FEATURES = ["hour", "dayofyear",  # "day",
@@ -38,6 +40,9 @@ def read_data(root_folder="./data"):
     df_test = pd.read_csv(os.path.join(root_folder, "pm_test.csv"))
     df_weather = pd.read_csv(os.path.join(root_folder, "weather.csv"))
     df_sub = pd.read_csv(os.path.join(root_folder, "sample_submission.csv"))
+
+    df_train = df_train.rename(columns={"type": "pm_type"})
+    df_test  = df_test.rename(columns={"type": "pm_type"})
 
     df_train['date'] = pd.to_datetime(df_train['date'])
     df_test['date'] = pd.to_datetime(df_test['date'])
@@ -157,13 +162,17 @@ def simple_label_encode(all_data, cat_feat):
     """
     docstring
     """
+    cat_input_dims = {}
+
     # SIMPLE LABEL ENCODE
     for col in cat_feat:
         ll = [x for x in all_data[col].unique().tolist() if not pd.isnull(x)]
         dd = {l: i for i, l in enumerate(ll)}
         all_data[col] = all_data[col].map(dd)
+        all_data[col] = all_data[col].astype(int)
+        cat_input_dims[col] = len(ll)
 
-    return all_data
+    return all_data, cat_input_dims
 
 
 def one_hot_encode(df, cols):
@@ -200,7 +209,7 @@ def read_and_preprocess(targetTransform):
     docstring
     """
     train, test, sub, weather = read_data()
-    # train = get_folds(train)
+    train = get_folds(train)
 
     train["train"] = 1
     test["train"] = 0
@@ -210,7 +219,8 @@ def read_and_preprocess(targetTransform):
     # print(all_data.head())
     # print("DONE ISNA_COLS...\n" + "-"*20)
 
-    all_data = simple_label_encode(all_data, CAT_FEATURES)
+    all_data, cat_input_dims = simple_label_encode(all_data, CAT_FEATURES)
+    print(cat_input_dims)
     # print(all_data.head())
     # print("DONE SIMPLE LABEL ENCODE...\n" + "-"*20)
 
@@ -227,35 +237,20 @@ def read_and_preprocess(targetTransform):
     # print(targetTransform.inverse_transform_target(train.target))
     # print("DONE TARGET TRANSFORMING...\n" + "-"*20)
 
-    return train, test
+    return train, test, cat_input_dims
 
+def create_model_dir(directory):
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
 
-# if __name__ == '__main__':
-#     train, test, sub, weather = read_data()
-#     # train = get_folds(train)
+def seed_everything(seed=42):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
 
-#     train["train"] = 1
-#     test["train"] = 0
-#     all_data = pd.concat([train, test]).reset_index(drop=True)
-
-#     all_data, cat_feat, cont_feat = add_isna_cols(all_data, CAT_FEATURES, CONT_FEATURES)
-#     print(all_data.head())
-#     print("DONE ISNA_COLS...\n" + "-"*20)
-
-#     all_data = simple_label_encode(all_data, CAT_FEATURES)
-#     print(all_data.head())
-#     print("DONE SIMPLE LABEL ENCODE...\n" + "-"*20)
-
-#     train = all_data[all_data.train == 1]
-#     test = all_data[all_data.train == 0]
-#     del train["train"]
-#     del test["train"]
-#     del all_data
-
-#     targetTransform = TargetTransform(transform_power=2)
-#     train["target"] = targetTransform.transform_target(train.aqi)
-
-#     print(train.aqi)
-#     print(train.target)
-#     print(targetTransform.inverse_transform_target(train.target))
-#     print("DONE TARGET TRANSFORMING...\n" + "-"*20)
+if __name__ == '__main__':
+    targetTransform = TargetTransform(transform_power=2)
+    read_and_preprocess(targetTransform)
