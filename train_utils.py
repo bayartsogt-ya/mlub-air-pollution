@@ -77,7 +77,7 @@ def train_fold(PARAMS, fold, train_, valid_, test,
         shuffle=False)
 
     loss_fn = nn.MSELoss()
-    model_dir = os.path.join(PARAMS["MODEL_DIR"], "model_%d.pth" % (fold))
+    model_path = os.path.join(PARAMS["MODEL_DIR"], "model_%d.pth" % (fold))
     model = MLP(cat_feat_dims=cat_input_dims, cont_feat=cont_feat, device=device).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=PARAMS["LEARNING_RATE"], weight_decay=PARAMS["WEIGHT_DECAY"])
 
@@ -86,7 +86,9 @@ def train_fold(PARAMS, fold, train_, valid_, test,
     print("-----   ----------   ----------")
     for epoch in range(1, PARAMS["EPOCHS"] + 1):
         train_loss = train_epoch(model, train_loader, optimizer, loss_fn, device)
-        valid_loss = validate_on(model, valid_loader, loss_fn, device)
+        # valid_loss = validate_on(model, valid_loader, loss_fn, device)
+        y_valid_pred = predict_on(model, valid_loader)
+        valid_loss = np.sqrt(mean_squared_error(valid_.aqi.values, y_valid_pred))
 
         # LOG THE TRAIN PROGRESS
         if PARAMS["VERBOSE"] != None and epoch % PARAMS["VERBOSE"] == 0:
@@ -94,11 +96,12 @@ def train_fold(PARAMS, fold, train_, valid_, test,
 
         # SAVE BEST MODEL
         if valid_loss < best_loss:
-            torch.save(model.state_dict(), model_dir)
+            best_loss = valid_loss
+            torch.save(model.state_dict(), model_path)
 
     print("Testing...")
     model = MLP(cat_feat_dims=cat_input_dims, cont_feat=cont_feat, device=device).to(device)
-    model.load_state_dict(torch.load(model_dir))
+    model.load_state_dict(torch.load(model_path))
 
     y_valid_pred = predict_on(model, valid_loader)
     y_test_pred = predict_on(model, test_loader)
