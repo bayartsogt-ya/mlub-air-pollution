@@ -9,15 +9,22 @@ from sklearn.metrics import mean_squared_error
 from utils import TargetTransform, read_and_preprocess, create_model_dir, seed_everything
 from train_utils import train_fold
 
+import argparse
+
+
+
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Arguments.')
+    parser.add_argument('--data_dir', default="./data", type=str ,help='path to data directory')
+    args = parser.parse_args()
 
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     print("device:", DEVICE)
 
     st = time()
     targetTransform = TargetTransform(transform_power=1)
-    train, test, cat_input_dims = read_and_preprocess(targetTransform)
+    train, test, cat_input_dims = read_and_preprocess(targetTransform, root_folder=args.data_dir)
     train = train.reset_index(drop=True)
     test = test.reset_index(drop=True)
 
