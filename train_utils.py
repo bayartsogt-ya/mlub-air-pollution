@@ -15,7 +15,7 @@ def train_epoch(model, train_loader, optimizer, loss_fn, device):
 
         # FORWARD
         y_true = batch["y"].to(device)
-        y_pred = model(batch)
+        y_pred = torch.squeeze(model(batch), dim=1)
 
         loss = loss_fn(y_true, y_pred)
         loss.backward()
