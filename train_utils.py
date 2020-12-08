@@ -56,7 +56,7 @@ def predict_on(model, test_loader):
     for batch in tqdm(test_loader):
         # FORWARD
         with torch.no_grad():
-            y_pred = model(batch)
+            y_pred = torch.squeeze(model(batch), dim=1)
         y_pred_list.append(y_pred.cpu().detach().numpy())
 
     return np.concatenate(y_pred_list, 0)
