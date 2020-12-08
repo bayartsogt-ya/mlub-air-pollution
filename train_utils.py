@@ -69,7 +69,7 @@ def predict_on(model, test_loader):
 
 
 def train_fold(PARAMS, fold, train_, valid_, test,
-               seed, cat_input_dims, device, cat_feat=CAT_FEATURES, cont_feat=CONT_FEATURES):
+               seed, targetTransform, cat_input_dims, device, cat_feat=CAT_FEATURES, cont_feat=CONT_FEATURES):
 
     train_loader = torch.utils.data.DataLoader(
         TrainDataset(train_, cat_feat, cont_feat),
@@ -95,9 +95,10 @@ def train_fold(PARAMS, fold, train_, valid_, test,
     print("-----   ----------   ----------")
     for epoch in range(1, PARAMS["EPOCHS"] + 1):
         train_loss = train_epoch(model, train_loader, optimizer, loss_fn, device)
-        valid_loss = validate_on(model, valid_loader, loss_fn, device)
-        # y_valid_pred = predict_on(model, valid_loader)
-        # valid_loss = np.sqrt(mean_squared_error(valid_.aqi.values, y_valid_pred))
+        # valid_loss = validate_on(model, valid_loader, loss_fn, device)
+        y_valid_pred = predict_on(model, valid_loader)
+        valid_loss = np.sqrt(mean_squared_error(
+            valid_.aqi.values, targetTransform.inverse_transform_target(y_valid_pred)))
 
         # LOG THE TRAIN PROGRESS
         if PARAMS["VERBOSE"] != None and epoch % PARAMS["VERBOSE"] == 0:
@@ -115,6 +116,7 @@ def train_fold(PARAMS, fold, train_, valid_, test,
 
     y_valid_pred = predict_on(model, valid_loader)
     y_test_pred = predict_on(model, test_loader)
-    print("RMSE: %5.1f\n------------------------" % (np.sqrt(mean_squared_error(valid_.aqi.values, y_valid_pred))))
+    print("RMSE: %5.1f\n------------------------" %
+          (np.sqrt(mean_squared_error(valid_.aqi.values, targetTransform.inverse_transform_target(y_valid_pred)))))
 
     return y_valid_pred, y_test_pred

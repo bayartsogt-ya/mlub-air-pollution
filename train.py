@@ -24,8 +24,8 @@ if __name__ == "__main__":
     print("DONE READING DATA %4.1f sec"%(time() - st))
 
     PARAMS = {
-        "BATCH_SIZE": 32,
-        "EPOCHS": 1,
+        "BATCH_SIZE": 512,
+        "EPOCHS": 10,
         "LEARNING_RATE": 1e-1,
         "WEIGHT_DECAY": 1e-3,
         "VERBOSE": 1,
@@ -66,7 +66,7 @@ if __name__ == "__main__":
             print(train_.shape, valid_.shape)
 
             # TRAIN AND TEST
-            y_valid_pred, y_test_pred = train_fold(PARAMS, fold, train_, valid_, test, seed,  cat_input_dims, DEVICE)
+            y_valid_pred, y_test_pred = train_fold(PARAMS, fold, train_, valid_, test, seed, targetTransform, cat_input_dims, DEVICE)
 
             # EVALUATE
             oof_[valid_idx] += targetTransform.inverse_transform_target(y_valid_pred)
