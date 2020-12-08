@@ -38,7 +38,8 @@ def validate_on(model, valid_loader, loss_fn, device):
     for batch in tqdm(valid_loader):
         # FORWARD
         y_true = batch["y"].to(device)
-        y_pred = torch.squeeze(model(batch), dim=1)
+        with torch.no_grad():
+            y_pred = torch.squeeze(model(batch), dim=1)
         loss = loss_fn(y_true, y_pred)
 
         valid_loss += loss.item()
@@ -54,7 +55,8 @@ def predict_on(model, test_loader):
     model.eval()
     for batch in tqdm(test_loader):
         # FORWARD
-        y_pred = model(batch)
+        with torch.no_grad():
+            y_pred = model(batch)
         y_pred_list.append(y_pred.cpu().detach().numpy())
 
     return np.concatenate(y_pred_list, 0)
@@ -92,7 +94,7 @@ def train_fold(PARAMS, fold, train_, valid_, test,
 
         # LOG THE TRAIN PROGRESS
         if PARAMS["VERBOSE"] != None and epoch % PARAMS["VERBOSE"] == 0:
-            print("\r\r%5d | %10.1f | %10.1f" % (epoch, train_loss, valid_loss))
+            print("%5d | %10.1f | %10.1f" % (epoch, train_loss, valid_loss))
 
         # SAVE BEST MODEL
         if valid_loss < best_loss:
