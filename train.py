@@ -48,6 +48,7 @@ if __name__ == "__main__":
     pred = np.zeros(test.shape[0],)
 
     create_model_dir(PARAMS["MODEL_DIR"])
+    oof_idx = np.array(train[train["fold"] != -1].index.tolist())
 
     for seed in SEEDS:
 
@@ -94,7 +95,6 @@ if __name__ == "__main__":
         print("OOF %2.4f | CV %2.4f | STD %2.4f" % (score, np.mean(scores), np.std(scores)))
 
     # calculate competition metric
-    oof_idx = np.array(train[train["fold"] != -1].index.tolist())
     train.loc[oof_idx, "aqi_pred"] = oof[oof_idx]
     score = np.sqrt(mean_squared_error(train.loc[oof_idx, "aqi"].values, oof[oof_idx]))
 
