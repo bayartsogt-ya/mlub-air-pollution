@@ -31,7 +31,7 @@ CONT_FEATURES = ["hour", "dayofyear",  # "day",
 TARGET = "target"
 
 
-def read_data(root_folder="./data"):
+def read_data(root_folder):
     """
     docstring
     """
@@ -204,11 +204,11 @@ class TargetTransform():
         return np.power(pd_series, self.transform_power)
 
 
-def read_and_preprocess(targetTransform):
+def read_and_preprocess(targetTransform, root_folder="./data"):
     """
     docstring
     """
-    train, test, sub, weather = read_data()
+    train, test, sub, weather = read_data(root_folder)
     train = get_folds(train)
 
     train["train"] = 1

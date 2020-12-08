@@ -21,7 +21,7 @@ if __name__ == "__main__":
     train = train.reset_index(drop=True)
     test = test.reset_index(drop=True)
 
-    print("DONE READING DATA %4.1f sec"%(time() - st))
+    print("DONE READING DATA %4.1f sec" % (time() - st))
 
     PARAMS = {
         "BATCH_SIZE": 512,
@@ -66,7 +66,8 @@ if __name__ == "__main__":
             print(train_.shape, valid_.shape)
 
             # TRAIN AND TEST
-            y_valid_pred, y_test_pred = train_fold(PARAMS, fold, train_, valid_, test, seed, targetTransform, cat_input_dims, DEVICE)
+            y_valid_pred, y_test_pred = train_fold(PARAMS, fold, train_, valid_,
+                                                   test, seed, targetTransform, cat_input_dims, DEVICE)
 
             # EVALUATE
             oof_[valid_idx] += targetTransform.inverse_transform_target(y_valid_pred)
@@ -94,3 +95,11 @@ if __name__ == "__main__":
     print("- "*10)
     print("OOF %2.4f" % (score))
     print("-"*25)
+
+    print("Preparing Submission...")
+    sub = test[["ID"]].copy()
+    sub["aqi"] = pred
+    sub.loc[test[~test.aqi.isna()].index, "aqi"] = test.loc[test[~test.aqi.isna()].index, "aqi"].values
+    sub.to_csv("submission.csv", index=False)
+
+    print(sub.sample(5))
