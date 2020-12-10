@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
     st = time()
     targetTransform = TargetTransform(transform_power=1)
-    train, test, cat_input_dims = read_and_preprocess(targetTransform, root_folder=args.data_dir)
+    train, test, cont_feat = read_and_preprocess(targetTransform, root_folder=args.data_dir)
     train = train.reset_index(drop=True)
     test = test.reset_index(drop=True)
 
@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
             # TRAIN AND TEST
             y_valid_pred, y_test_pred = train_fold(PARAMS, fold, train_, valid_,
-                                                   test, seed, targetTransform, cat_input_dims, DEVICE)
+                                                   test, seed, targetTransform, DEVICE, cont_feat=cont_feat)
 
             # EVALUATE
             oof_[valid_idx] += targetTransform.inverse_transform_target(y_valid_pred)

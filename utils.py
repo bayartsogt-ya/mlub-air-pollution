@@ -216,13 +216,12 @@ def read_and_preprocess(targetTransform, root_folder="./data"):
     all_data = pd.concat([train, test]).reset_index(drop=True)
 
     all_data, cat_feat, cont_feat = add_isna_cols(all_data, CAT_FEATURES, CONT_FEATURES)
-    # print(all_data.head())
-    # print("DONE ISNA_COLS...\n" + "-"*20)
 
-    all_data, cat_input_dims = simple_label_encode(all_data, CAT_FEATURES)
-    print(cat_input_dims)
-    # print(all_data.head())
-    # print("DONE SIMPLE LABEL ENCODE...\n" + "-"*20)
+    # all_data, cat_input_dims = simple_label_encode(all_data, CAT_FEATURES)
+    # print(cat_input_dims)
+
+    all_data, new_cols = one_hot_encode(all_data, CAT_FEATURES)
+    cont_feat += new_cols
 
     train = all_data[all_data.train == 1]
     test = all_data[all_data.train == 0]
@@ -237,7 +236,7 @@ def read_and_preprocess(targetTransform, root_folder="./data"):
     # print(targetTransform.inverse_transform_target(train.target))
     # print("DONE TARGET TRANSFORMING...\n" + "-"*20)
 
-    return train, test, cat_input_dims
+    return train, test, cont_feat
 
 
 def create_model_dir(directory):

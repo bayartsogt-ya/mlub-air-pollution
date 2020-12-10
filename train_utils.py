@@ -14,17 +14,14 @@ def train_epoch(model, train_loader, optimizer, loss_fn, device):
     train_loss = 0
     model.train()
     for batch in tqdm(train_loader):
-
-        for col in batch:
-            batch[col] = batch[col].cuda()
+        cont_feat = batch["cont_feat"].to(device)
+        y_true = batch["y"].to(device)
 
         optimizer.zero_grad()
 
         # FORWARD
-        # y_true = batch["y"].cuda()
-        y_pred = torch.squeeze(model(batch), dim=1)
-
-        loss = loss_fn(batch["y"], y_pred)
+        y_pred = model(cont_feat)
+        loss = loss_fn(y_true, y_pred)
         loss.backward()
         optimizer.step()
 
@@ -41,12 +38,12 @@ def validate_on(model, valid_loader, loss_fn, device):
     model.eval()
     for batch in tqdm(valid_loader):
         # FORWARD
-        for col in batch:
-            batch[col] = batch[col].cuda()
+        cont_feat = batch["cont_feat"].to(device)
+        y_true = batch["y"].to(device)
 
         with torch.no_grad():
-            y_pred = torch.squeeze(model(batch), dim=1)
-        loss = loss_fn(batch["y"], y_pred)
+            y_pred = model(cont_feat)
+        loss = loss_fn(y_true, y_pred)
 
         valid_loss += loss.item()
 
@@ -55,41 +52,41 @@ def validate_on(model, valid_loader, loss_fn, device):
     return valid_loss
 
 
-def predict_on(model, test_loader):
+def predict_on(model, test_loader, device):
     # VALIDATION
     y_pred_list = []
     model.eval()
     for batch in tqdm(test_loader):
-        for col in batch:
-            batch[col] = batch[col].cuda()
+        cont_feat = batch["cont_feat"].to(device)
+        
         # FORWARD
         with torch.no_grad():
-            y_pred = torch.squeeze(model(batch), dim=1)
+            y_pred = model(cont_feat)
         y_pred_list.append(y_pred.cpu().detach().numpy())
 
     return np.concatenate(y_pred_list, 0)
 
 
 def train_fold(PARAMS, fold, train_, valid_, test,
-               seed, targetTransform, cat_input_dims, device, cat_feat=CAT_FEATURES, cont_feat=CONT_FEATURES):
+               seed, targetTransform, device, cat_feat=CAT_FEATURES, cont_feat=CONT_FEATURES):
 
     train_loader = torch.utils.data.DataLoader(
-        TrainDataset(train_, cat_feat, cont_feat),
+        TrainDataset(train_, cont_feat),
         batch_size=PARAMS["BATCH_SIZE"],
         shuffle=True)
     valid_loader = torch.utils.data.DataLoader(
-        TrainDataset(valid_, cat_feat, cont_feat),
+        TrainDataset(valid_, cont_feat),
         batch_size=PARAMS["BATCH_SIZE"],
         shuffle=False)
     test_loader = torch.utils.data.DataLoader(
-        TestDataset(test, cat_feat, cont_feat),
+        TestDataset(test, cont_feat),
         batch_size=PARAMS["BATCH_SIZE"],
         shuffle=False)
 
     loss_fn = nn.MSELoss()
     model_path = os.path.join(PARAMS["MODEL_DIR"], "model_%d.pth" % (fold))
-    model = MLP(cat_feat_dims=cat_input_dims, cont_feat=cont_feat, device=device)
-    model.cuda()
+    model = MLP(cont_feat=cont_feat)
+    # model.to(device=device)
     optimizer = torch.optim.Adam(model.parameters(), lr=PARAMS["LEARNING_RATE"], weight_decay=PARAMS["WEIGHT_DECAY"])
 
     best_loss = np.inf
@@ -98,7 +95,7 @@ def train_fold(PARAMS, fold, train_, valid_, test,
     for epoch in range(1, PARAMS["EPOCHS"] + 1):
         train_loss = train_epoch(model, train_loader, optimizer, loss_fn, device)
         # valid_loss = validate_on(model, valid_loader, loss_fn, device)
-        y_valid_pred = predict_on(model, valid_loader)
+        y_valid_pred = predict_on(model, valid_loader, device)
         valid_loss = np.sqrt(mean_squared_error(
             valid_.aqi.values, targetTransform.inverse_transform_target(y_valid_pred)))
 
@@ -112,12 +109,12 @@ def train_fold(PARAMS, fold, train_, valid_, test,
             torch.save(model.state_dict(), model_path)
 
     print("Testing...")
-    model = MLP(cat_feat_dims=cat_input_dims, cont_feat=cont_feat, device=device)
-    model.cuda()
+    # model = MLP(cont_feat=cont_feat)
+    # model.to(device=device)
     model.load_state_dict(torch.load(model_path))
 
-    y_valid_pred = predict_on(model, valid_loader)
-    y_test_pred = predict_on(model, test_loader)
+    y_valid_pred = predict_on(model, valid_loader, device)
+    y_test_pred = predict_on(model, test_loader, device)
     print("RMSE: %5.1f\n------------------------" %
           (np.sqrt(mean_squared_error(valid_.aqi.values, targetTransform.inverse_transform_target(y_valid_pred)))))
 
