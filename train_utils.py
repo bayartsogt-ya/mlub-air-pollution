@@ -86,7 +86,7 @@ def train_fold(PARAMS, fold, train_, valid_, test,
     loss_fn = nn.MSELoss()
     model_path = os.path.join(PARAMS["MODEL_DIR"], "model_%d.pth" % (fold))
     model = MLP(cont_feat=cont_feat)
-    # model.to(device=device)
+    model.to(device=device)
     optimizer = torch.optim.Adam(model.parameters(), lr=PARAMS["LEARNING_RATE"], weight_decay=PARAMS["WEIGHT_DECAY"])
 
     best_loss = np.inf
